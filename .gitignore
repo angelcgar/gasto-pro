@@ -1,0 +1,32 @@
+# Entorno virtual
+venv/
+.env
+
+# Archivos de bases de datos (opcional si quieres compartir solo el esquema)
+*.db
+*.sqlite3
+
+# Archivos de configuración o claves locales
+*.pyc
+__pycache__/
+instance/
+config.py
+
+# Archivos temporales o del sistema
+*.log
+.DS_Store
+*.swp
+*.swo
+*.bak
+
+# Archivos generados por IDEs
+.vscode/
+.idea/
+
+# Archivos de despliegue (si usas Render/Fly)
+*.tar.gz
+build/
+dist/
+
+# Archivos de paquetes
+*.egg-info/
