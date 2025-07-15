@@ -1,6 +1,6 @@
 from flask import Flask, redirect, render_template, request, session, flash
 from flask_session import Session
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from cs50 import SQL
 
 app = Flask(__name__)
@@ -49,6 +49,36 @@ def register():
 
     # Si el usuario llega con GET
     return render_template("register.html")
+
+@app.route("/login", methods=["GET", "POST"])
+def login() :
+    # Limpiar cualquier sesión previa
+    session.clear()
+
+    if request.method == "POST":
+        username: str = request.form.get("username", "").strip()
+        password: str = request.form.get("password", "")
+
+        # Validar campos
+        if not username or not password:
+            flash("Username and password are required.")
+            return render_template("login.html")
+
+        # Buscar usuario en la base de datos
+        rows = db.execute("SELECT * FROM users WHERE username = ?", username)
+
+        # Verificar usuario y contraseña
+        if len(rows) != 1 or not check_password_hash(rows[0]["hash"], password):
+            flash("Invalid username or password.")
+            return render_template("login.html")
+
+        # Iniciar sesión guardando el user_id
+        session["user_id"] = rows[0]["id"]
+
+        flash("Welcome back!")
+        return redirect("/")
+
+    return render_template("login.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
