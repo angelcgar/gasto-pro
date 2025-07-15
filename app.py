@@ -80,5 +80,16 @@ def login() :
 
     return render_template("login.html")
 
+@app.route("/logout")
+def logout():
+    # Borrar todos los datos de sesión
+    session.clear()
+
+    # Notificar al usuario
+    flash("You have been logged out.")
+
+    # Redirigir al login
+    return redirect("/login")
+
 if __name__ == "__main__":
     app.run(debug=True)
