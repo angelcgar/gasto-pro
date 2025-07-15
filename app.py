@@ -3,19 +3,30 @@ from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 from cs50 import SQL
 
+from helpers import login_required, usd
+
 app = Flask(__name__)
 
 # Configurar la configuración de la aplicación
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.jinja_env.filters["usd"] = usd
 Session(app)
 
 # Configurar la base de datos
 db = SQL("sqlite:///gasto.db")
 
 @app.route("/")
-def index():
-    return render_template("index.html")
+@login_required
+def index() -> str:
+    user_id: int = session["user_id"]
+
+    # Obtener información del usuario
+    user = db.execute("SELECT username, cash FROM users WHERE id = ?", user_id)[0]
+    username: str = user["username"]
+    cash: float = float(user["cash"])
+
+    return render_template("index.html", username=username, cash=cash)
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
