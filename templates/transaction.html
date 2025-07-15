@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+
+{% block title %}New Transaction{% endblock %}
+
+{% block main %}
+<form action="/transaction" method="post" style="max-width: 500px; margin: auto;">
+  <h3 class="mb-4 text-center">Add Transaction</h3>
+
+  <input name="amount" class="form-control mb-3" placeholder="Amount (e.g. 99.99)" required>
+
+  <input name="description" class="form-control mb-3" placeholder="Description" required>
+
+  <select name="category" class="form-select mb-3" required>
+    <option value="" disabled selected>Select category</option>
+    {% for category in categories %}
+    <option value="{{ category.name }}">{{ category.name }}</option>
+    {% endfor %}
+  </select>
+
+  <select name="type" class="form-select mb-4" required>
+    <option value="income">Income</option>
+    <option value="expense" selected>Expense</option>
+  </select>
+
+  <button class="btn btn-primary w-100" type="submit">Add</button>
+</form>
+{% endblock %}

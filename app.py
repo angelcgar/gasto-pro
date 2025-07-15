@@ -2,6 +2,7 @@ from flask import Flask, redirect, render_template, request, session, flash
 from flask_session import Session
 from werkzeug.security import generate_password_hash, check_password_hash
 from cs50 import SQL
+from decimal import Decimal, InvalidOperation
 
 from helpers import login_required, usd
 
@@ -101,6 +102,51 @@ def logout():
 
     # Redirigir al login
     return redirect("/login")
+
+@app.route("/transaction", methods=["GET", "POST"])
+@login_required
+def transaction():
+    if request.method == "POST":
+        description: str = request.form.get("description", "").strip()
+        amount_str: str = request.form.get("amount", "").strip()
+        category: str = request.form.get("category", "").strip()
+        type_: str = request.form.get("type", "")
+
+        # todo: hacerlo mas flexible para el usuario
+        if not description or not amount_str or not category or type_ not in ("income", "expense"):
+            flash("All fields are required.")
+            return render_template("transaction.html")
+
+        try:
+            amount = Decimal(amount_str)
+            if amount <= 0:
+                raise InvalidOperation
+        except InvalidOperation:
+            flash("Invalid amount.")
+            return render_template("transaction.html")
+
+        user_id = session["user_id"]
+
+        # Insertar la transacción
+        db.execute(
+            "INSERT INTO transactions (user_id, description, amount, category, type) VALUES (?, ?, ?, ?, ?)",
+            session["user_id"], description, str(amount), category, type_
+        )
+
+        # Actualizar el cash del usuario
+        # todo: quitar los string mágicos
+        if type_ == "income":
+            db.execute("UPDATE users SET cash = cash + ? WHERE id = ?", str(amount), user_id)
+        elif type_ == "expense":
+            db.execute("UPDATE users SET cash = cash - ? WHERE id = ?", str(amount), user_id)
+
+
+        flash("Transaction recorded successfully!")
+        return redirect("/")
+
+    # GET: obtener las categorías de la base de datos
+    categories = db.execute("SELECT name FROM categories ORDER BY name ASC")
+    return render_template("transaction.html", categories=categories)
 
 if __name__ == "__main__":
     app.run(debug=True)
