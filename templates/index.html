@@ -5,6 +5,11 @@
 {% block main %}
 <div class="text-center mt-5">
   <h2>Bienvenido, {{ username }} 👋</h2>
-  <p class="lead mt-3">Saldo disponible: <strong>{{ cash | usd }}</strong></p>
+  <p class="lead mt-3">
+    Saldo disponible:
+    <strong class="{% if cash >= 0 %}text-success{% else %}text-danger{% endif %}">
+      {{ cash | usd }}
+    </strong>
+  </p>
 </div>
 {% endblock %}
