@@ -7,3 +7,4 @@ load_dotenv()  # Carga el archivo .env
 secret_key = os.getenv("FLASK_SECRET_KEY")
 database_url = os.getenv("DATABASE_URL")
 debug_mode = os.getenv("DEBUG", "False") == "True"
+openai_api_key = os.getenv("OPENAI_API_KEY")

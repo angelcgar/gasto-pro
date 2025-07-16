@@ -1,12 +1,20 @@
-from flask import Flask, redirect, render_template, request, session, flash
-from flask_session import Session
-from werkzeug.security import generate_password_hash, check_password_hash
-from cs50 import SQL
+# python
 from decimal import Decimal, InvalidOperation
 
-from helpers import login_required, usd
+# flask
+from flask import Flask, redirect, render_template, request, session, flash
+from flask_session import Session
+# werkzeug
+from werkzeug.security import generate_password_hash, check_password_hash
+# cs50
+from cs50 import SQL
 
-from constants import secret_key, database_url, debug_mode
+# openai
+from openai import OpenAI
+
+# Configuración de la app
+from helpers import login_required, usd
+from constants import secret_key, database_url, debug_mode, openai_api_key
 
 app = Flask(__name__)
 
@@ -194,12 +202,37 @@ def analysis():
         for category, amount in category_totals.items()
     } if total_expense else {}
 
+    # Prompt para IA
+    prompt = f"""
+    Resume los gastos de este mes. Total ingresos: ${income_total:.2f}, total gastos: ${expense_total:.2f}.
+    Porcentajes de gasto por categoría: {category_percentages}.
+    Proporciona un consejo financiero corto en español.
+    """
+
+    # Obtener respuesta de la IA (OpenAI)
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=openai_api_key
+    )
+    ai_message = None
+    try:
+        response = client.chat.completions.create(
+            model="openai/gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0.7,
+        )
+        ai_message = response.choices[0].message.content
+    except Exception as e:
+        ai_message = "La IA no está disponible en este momento."
+
     return render_template("analysis.html",
                            income_pct=income_pct,
                            expense_pct=expense_pct,
                            category_percentages=category_percentages,
                            income_total=income_total,
-                           expense_total=expense_total)
+                           expense_total=expense_total,
+                           ai_message=ai_message)
 
 if __name__ == "__main__":
     app.run(debug=True)
