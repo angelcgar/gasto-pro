@@ -34,7 +34,40 @@ Monthly Analysis
 
 <hr class="my-4">
 <h4 class="text-center">🤖 GastoPro AI Advisor</h4>
-<div class="alert alert-info mt-3 mx-auto" style="max-width: 700px;">
-  {{ ai_message }}
+
+<div class="text-center mb-3">
+  <button id="load-ai" class="btn btn-outline-primary">🔍 Analizar con IA</button>
 </div>
+
+<div id="ai-output" class="alert alert-info mx-auto d-none" style="max-width: 700px;"></div>
+<script>
+  document.getElementById('load-ai').addEventListener('click', function () {
+    const button = this;
+    button.textContent = '⏳ Cargando...';
+    button.disabled = true;
+    button.classList.add('disabled');
+    button.classList.remove('btn-outline-primary');
+    button.classList.add('btn-outline-secondary');
+
+    const outputDiv = document.getElementById('ai-output');
+    outputDiv.classList.add('d-none');
+    outputDiv.textContent = 'Cargando...';
+
+    fetch('/analysis/ai')
+      .then(response => response.json())
+      .then(data => {
+        outputDiv.textContent = data.message;
+        outputDiv.classList.remove('d-none');
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        outputDiv.textContent = 'Error al cargar la respuesta de la IA.';
+        outputDiv.classList.remove('d-none');
+      })
+      .finally(() => {
+        button.disable = true;
+        button.textContent = '🔍 Analizado';
+      });
+  });
+</script>
 {% endblock %}

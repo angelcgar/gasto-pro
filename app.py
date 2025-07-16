@@ -2,7 +2,7 @@
 from decimal import Decimal, InvalidOperation
 
 # flask
-from flask import Flask, redirect, render_template, request, session, flash
+from flask import Flask, jsonify, redirect, render_template, request, session, flash
 from flask_session import Session
 # werkzeug
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -227,12 +227,68 @@ def analysis():
         ai_message = "La IA no está disponible en este momento."
 
     return render_template("analysis.html",
-                           income_pct=income_pct,
-                           expense_pct=expense_pct,
-                           category_percentages=category_percentages,
-                           income_total=income_total,
-                           expense_total=expense_total,
-                           ai_message=ai_message)
+                            income_pct=income_pct,
+                            expense_pct=expense_pct,
+                            category_percentages=category_percentages,
+                            income_total=income_total,
+                            expense_total=expense_total)
+
+@app.route("/analysis/ai")
+@login_required
+def analysis_ai():
+    user_id = session["user_id"]
+
+    rows = db.execute("""
+        SELECT amount, category, type, timestamp
+        FROM transactions
+        WHERE user_id = ?
+          AND strftime('%Y-%m', timestamp) = strftime('%Y-%m', 'now')
+    """, user_id)
+
+    from decimal import Decimal
+    income_total = sum(Decimal(row["amount"]) for row in rows if row["type"] == "income")
+    expense_total = sum(Decimal(row["amount"]) for row in rows if row["type"] == "expense")
+
+    category_totals = {}
+    for row in rows:
+        if row["type"] == "expense":
+            category_totals[row["category"]] = category_totals.get(row["category"], 0) + Decimal(row["amount"])
+
+    total_expense = sum(category_totals.values())
+    category_percentages = {
+        cat: round(amt / total_expense * 100, 2)
+        for cat, amt in category_totals.items()
+    } if total_expense else {}
+
+    # Generar respuesta IA
+    prompt = f"""
+    Resume los gastos de este mes. Total ingresos: ${income_total:.2f}, total gastos: ${expense_total:.2f}.
+    Porcentajes de gasto por categoría: {category_percentages}.
+    Proporciona un consejo financiero corto en español.
+    """
+
+    # Obtener respuesta de la IA (OpenAI)
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=openai_api_key
+    )
+    ai_message = None
+
+    try:
+        import openai
+        import os
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        response = client.chat.completions.create(
+            model="openai/gpt-4o",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=100,
+            temperature=0.7,
+        )
+        ai_message = response.choices[0].message.content
+    except Exception as e:
+        ai_message = "La IA no está disponible en este momento."
+
+    return jsonify({"message": ai_message})
 
 if __name__ == "__main__":
     app.run(debug=True)
