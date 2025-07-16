@@ -20,7 +20,8 @@ CREATE TABLE transactions (
     description TEXT NOT NULL,
     amount TEXT NOT NULL,
     category TEXT NOT NULL,
-    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Propiedad en desuso
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
     FOREIGN KEY (user_id) REFERENCES users(id)
 );

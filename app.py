@@ -148,5 +148,15 @@ def transaction():
     categories = db.execute("SELECT name FROM categories ORDER BY name ASC")
     return render_template("transaction.html", categories=categories)
 
+@app.route("/history")
+@login_required
+def history():
+    transactions = db.execute(
+        "SELECT description, amount, category, type, timestamp FROM transactions WHERE user_id = ? ORDER BY timestamp DESC",
+        session["user_id"]
+    )
+    return render_template("history.html", transactions=transactions)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
