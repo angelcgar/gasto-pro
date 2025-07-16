@@ -6,6 +6,8 @@ from decimal import Decimal, InvalidOperation
 
 from helpers import login_required, usd
 
+from constants import secret_key, database_url, debug_mode
+
 app = Flask(__name__)
 
 # Configurar la configuración de la aplicación
@@ -15,7 +17,7 @@ app.jinja_env.filters["usd"] = usd
 Session(app)
 
 # Configurar la base de datos
-db = SQL("sqlite:///gasto.db")
+db = SQL(database_url)
 
 @app.route("/")
 @login_required
