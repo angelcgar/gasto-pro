@@ -1,0 +1,34 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Monthly Analysis
+{% endblock %}
+
+{% block main %}
+<div class="container mt-4">
+  <h2 class="text-center mb-4">Monthly Analysis</h2>
+
+  <div class="row text-center mb-5">
+    <div class="col">
+      <p class="fw-bold">Total Income:</p>
+      <p class="text-success">${{ "%.2f"|format(income_total|float) }} ({{ income_pct }}%)</p>
+    </div>
+    <div class="col">
+      <p class="fw-bold">Total Expenses:</p>
+      <p class="text-danger">${{ "%.2f"|format(expense_total|float) }} ({{ expense_pct }}%)</p>
+    </div>
+  </div>
+
+  <h5 class="text-center">Spending by Category</h5>
+  <ul class="list-group mx-auto" style="max-width: 400px;">
+    {% for category, pct in category_percentages.items() %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+      {{ category }}
+      <span class="badge bg-primary rounded-pill">{{ pct }}%</span>
+    </li>
+    {% else %}
+    <li class="list-group-item text-center text-muted">No expenses this month</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

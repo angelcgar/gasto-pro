@@ -159,6 +159,47 @@ def history():
     )
     return render_template("history.html", transactions=transactions)
 
+@app.route("/analysis")
+@login_required
+def analysis():
+    user_id = session["user_id"]
+
+    # Transacciones del mes actual
+    rows = db.execute("""
+        SELECT amount, category, type, timestamp
+        FROM transactions
+        WHERE user_id = ?
+          AND strftime('%Y-%m', timestamp) = strftime('%Y-%m', 'now')
+    """, user_id)
+
+    # Agrupar los datos
+    income_total = sum(float(row["amount"]) for row in rows if row["type"] == "income")
+    expense_total = sum(float(row["amount"]) for row in rows if row["type"] == "expense")
+    total = income_total + expense_total
+
+    # Porcentaje de ingresos vs gastos
+    income_pct = round(income_total / total * 100, 2) if total else 0
+    expense_pct = round(expense_total / total * 100, 2) if total else 0
+
+    # Gasto por categoría
+    category_totals = {}
+    for row in rows:
+        if row["type"] == "expense":
+            category_totals[row["category"]] = category_totals.get(row["category"], 0) + float(row["amount"])
+
+    # Total de gastos para porcentajes por categoría
+    total_expense = sum(category_totals.values())
+    category_percentages = {
+        category: round(amount / total_expense * 100, 2)
+        for category, amount in category_totals.items()
+    } if total_expense else {}
+
+    return render_template("analysis.html",
+                           income_pct=income_pct,
+                           expense_pct=expense_pct,
+                           category_percentages=category_percentages,
+                           income_total=income_total,
+                           expense_total=expense_total)
 
 if __name__ == "__main__":
     app.run(debug=True)
