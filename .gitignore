@@ -5,6 +5,8 @@ venv/
 # Archivos de bases de datos (opcional si quieres compartir solo el esquema)
 *.db
 *.sqlite3
+# Desplegar en render, no usar esto para algo serio. Mejor usar turso o sqlite en la nube
+!gasto.db
 
 # Archivos de configuración o claves locales
 *.pyc
