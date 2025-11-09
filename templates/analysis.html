@@ -1,72 +1,110 @@
 {% extends "layout.html" %}
 
 {% block title %}
-Monthly Analysis
+Análisis Mensual
 {% endblock %}
 
 {% block main %}
 <div class="container mt-4">
-  <h2 class="text-center mb-4">Monthly Analysis</h2>
+  <h2 class="text-center mb-4">📊 Análisis Mensual</h2>
 
   <div class="row text-center mb-5">
-    <div class="col">
-      <p class="fw-bold">Total Income:</p>
-      <p class="text-success">${{ "%.2f"|format(income_total|float) }} ({{ income_pct }}%)</p>
+    <div class="col-md-6">
+      <div class="card card-custom border-success mb-3">
+        <div class="card-body">
+          <h5 class="card-title">💰 Total Ingresos</h5>
+          <p class="h3 text-success mb-1">${{ "%.2f"|format(income_total|float) }}</p>
+          <p class="text-muted">{{ income_pct }}% del total</p>
+        </div>
+      </div>
     </div>
-    <div class="col">
-      <p class="fw-bold">Total Expenses:</p>
-      <p class="text-danger">${{ "%.2f"|format(expense_total|float) }} ({{ expense_pct }}%)</p>
+    <div class="col-md-6">
+      <div class="card card-custom border-danger mb-3">
+        <div class="card-body">
+          <h5 class="card-title">💸 Total Gastos</h5>
+          <p class="h3 text-danger mb-1">${{ "%.2f"|format(expense_total|float) }}</p>
+          <p class="text-muted">{{ expense_pct }}% del total</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <h5 class="text-center">Spending by Category</h5>
-  <ul class="list-group mx-auto" style="max-width: 400px;">
-    {% for category, pct in category_percentages.items() %}
-    <li class="list-group-item d-flex justify-content-between align-items-center">
-      {{ category }}
-      <span class="badge bg-primary rounded-pill">{{ pct }}%</span>
-    </li>
-    {% else %}
-    <li class="list-group-item text-center text-muted">No expenses this month</li>
-    {% endfor %}
-  </ul>
+  <div class="card card-custom mb-4">
+    <div class="card-body">
+      <h5 class="text-center mb-4">Gastos por Categoría</h5>
+      {% if category_percentages %}
+      <ul class="list-group">
+        {% for category, pct in category_percentages.items() %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>{{ category }}</span>
+          <span class="badge bg-primary rounded-pill">{{ pct }}%</span>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="text-center text-muted">No hay gastos este mes</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <hr class="my-5">
+
+  <div class="card card-custom">
+    <div class="card-body text-center">
+      <h4 class="mb-4">🤖 Asesor Financiero IA</h4>
+      <p class="text-muted mb-4">Obtén consejos personalizados basados en tus gastos del mes</p>
+
+      <button id="load-ai" class="btn btn-primary btn-custom">
+        🔍 Analizar con IA
+      </button>
+
+      <div id="ai-output" class="alert alert-info mt-4 d-none" style="text-align: left;">
+        <strong>💡 Consejo:</strong>
+        <p class="mb-0 mt-2" id="ai-message"></p>
+      </div>
+    </div>
+  </div>
 </div>
 
-<hr class="my-4">
-<h4 class="text-center">🤖 GastoPro AI Advisor</h4>
-
-<div class="text-center mb-3">
-  <button id="load-ai" class="btn btn-outline-primary">🔍 Analizar con IA</button>
-</div>
-
-<div id="ai-output" class="alert alert-info mx-auto d-none" style="max-width: 700px;"></div>
 <script>
   document.getElementById('load-ai').addEventListener('click', function () {
     const button = this;
-    button.textContent = '⏳ Cargando...';
+    const originalText = button.innerHTML;
+    button.innerHTML = '⏳ Analizando...';
     button.disabled = true;
     button.classList.add('disabled');
-    button.classList.remove('btn-outline-primary');
-    button.classList.add('btn-outline-secondary');
 
     const outputDiv = document.getElementById('ai-output');
+    const messageDiv = document.getElementById('ai-message');
     outputDiv.classList.add('d-none');
-    outputDiv.textContent = 'Cargando...';
+    messageDiv.textContent = '';
 
     fetch('/analysis/ai')
       .then(response => response.json())
       .then(data => {
-        outputDiv.textContent = data.message;
+        messageDiv.textContent = data.message;
         outputDiv.classList.remove('d-none');
+        button.innerHTML = '✓ Análisis Completo';
+
+        // Mostrar toast de éxito
+        if (window.Toast) {
+          Toast.success('Análisis de IA completado');
+        }
       })
       .catch(error => {
         console.error('Error:', error);
-        outputDiv.textContent = 'Error al cargar la respuesta de la IA.';
+        messageDiv.textContent = 'Error al cargar la respuesta de la IA. Por favor, intenta de nuevo.';
         outputDiv.classList.remove('d-none');
-      })
-      .finally(() => {
-        button.disable = true;
-        button.textContent = '🔍 Analizado';
+        outputDiv.classList.remove('alert-info');
+        outputDiv.classList.add('alert-danger');
+        button.innerHTML = originalText;
+        button.disabled = false;
+        button.classList.remove('disabled');
+
+        // Mostrar toast de error
+        if (window.Toast) {
+          Toast.error('No se pudo obtener el análisis de IA');
+        }
       });
   });
 </script>
