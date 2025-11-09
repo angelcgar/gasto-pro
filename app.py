@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from cs50 import SQL
 
 # openai
-from openai import OpenAI
+from openai import OpenAI as OpenAIClient
 
 # Configuración de la app
 from helpers import login_required, usd, calculate_monthly_analysis, generate_ai_prompt, get_ai_response
@@ -218,7 +218,7 @@ def analysis_ai():
     )
 
     # Configurar cliente de OpenAI
-    client = OpenAI(
+    client = OpenAIClient(
         base_url="https://openrouter.ai/api/v1",
         api_key=openai_api_key
     )
